@@ -99,7 +99,7 @@ const observer = new IntersectionObserver((entries) => {
 
 // Observe elements for scroll animations
 document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('.section-title, .section-subtitle, .about-content, .experience-content, .vision-content, .academic-content, .values-content, .contact-content, .principle-card, .timeline-item, .activity-item, .value-item, .contact-item');
+    const animatedElements = document.querySelectorAll('.section-title, .section-subtitle, .about-content, .experience-content, .vision-content, .academic-content, .values-content, .contact-content, .vision-highlight, .timeline-item, .activity-item, .value-item, .contact-item');
     
     animatedElements.forEach(el => {
         el.classList.add('fade-in');
@@ -108,19 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Counter animation for statistics
-function animateCounter(element, target, duration = 2000) {
-    let start = 0;
-    const increment = target / (duration / 16);
-    
-    const timer = setInterval(() => {
-        start += increment;
-        if (start >= target) {
-            element.textContent = target + '+';
-            clearInterval(timer);
+function animateCounter(element, target, duration = 4000) {
+    const startValue = 0;
+    const startTime = performance.now();
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const update = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOutCubic(progress);
+        const currentValue = Math.floor(startValue + (target - startValue) * easedProgress);
+        element.textContent = currentValue + '+';
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
         } else {
-            element.textContent = Math.floor(start) + '+';
+            element.textContent = target + '+';
         }
-    }, 16);
+    };
+
+    requestAnimationFrame(update);
 }
 
 // Trigger counter animation when stats section is visible
@@ -159,26 +167,66 @@ function typeWriter(element, text, speed = 100) {
     let i = 0;
     element.innerHTML = '';
     
-    function type() {
-        if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(type, speed);
+    return new Promise(resolve => {
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            } else {
+                resolve();
+            }
         }
-    }
-    
-    type();
+        type();
+    });
 }
 
 // Initialize typing animation when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle) {
-            const originalText = heroTitle.textContent;
-            typeWriter(heroTitle, originalText, 50);
-        }
-    }, 1500);
+    const heroTitle = document.querySelector('.hero-title');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const heroTagline = document.querySelector('.hero-tagline');
+    const heroButtons = document.querySelector('.hero-buttons');
+
+    if (!heroTitle || !heroSubtitle || !heroTagline || !heroButtons) {
+        return;
+    }
+
+    const titleText = heroTitle.textContent.trim();
+    const subtitleText = heroSubtitle.textContent.trim();
+    const taglineText = heroTagline.textContent.trim();
+
+    heroTitle.textContent = '';
+    heroSubtitle.textContent = '';
+    heroTagline.textContent = '';
+
+    heroSubtitle.style.opacity = '0';
+    heroSubtitle.style.transform = 'translateY(30px)';
+    heroTagline.style.opacity = '0';
+    heroTagline.style.transform = 'translateY(30px)';
+    heroButtons.classList.add('fade-in');
+    heroButtons.classList.remove('visible');
+
+    const startTyping = async () => {
+        const speed = 45;
+        await typeWriter(heroTitle, titleText, speed);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        heroSubtitle.style.opacity = '1';
+        heroSubtitle.style.transform = 'translateY(0)';
+        await typeWriter(heroSubtitle, subtitleText, speed);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        heroTagline.style.opacity = '1';
+        heroTagline.style.transform = 'translateY(0)';
+        await typeWriter(heroTagline, taglineText, speed);
+
+        requestAnimationFrame(() => {
+            heroButtons.classList.add('visible');
+        });
+    };
+
+    setTimeout(startTyping, 200);
 });
 
 // Form handling
@@ -328,7 +376,7 @@ scrollToTopBtn.addEventListener('mouseleave', () => {
 
 // Hover effects for cards
 document.addEventListener('DOMContentLoaded', () => {
-    const cards = document.querySelectorAll('.principle-card, .timeline-content, .activity-item, .value-item, .contact-item');
+    const cards = document.querySelectorAll('.vision-highlight, .activity-item, .contact-item, .value-item');
     
     cards.forEach(card => {
         card.addEventListener('mouseenter', () => {
@@ -398,6 +446,71 @@ document.head.appendChild(style);
 // Initialize particles
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(createParticles, 1000);
+});
+
+// Flip card interactions
+document.addEventListener('DOMContentLoaded', () => {
+    const flipCards = document.querySelectorAll('.flip-card');
+
+    const setCardState = (card, expanded) => {
+        card.classList.toggle('is-flipped', expanded);
+        card.setAttribute('aria-expanded', String(expanded));
+
+        const front = card.querySelector('.flip-card-front');
+        const back = card.querySelector('.flip-card-back');
+
+        if (front) {
+            front.setAttribute('aria-hidden', expanded ? 'true' : 'false');
+        }
+
+        if (back) {
+            back.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+        }
+    };
+
+    flipCards.forEach(card => {
+        card.setAttribute('role', 'button');
+        if (!card.hasAttribute('tabindex')) {
+            card.setAttribute('tabindex', '0');
+        }
+        setCardState(card, false);
+    });
+
+    const closeAll = (except = null) => {
+        flipCards.forEach(card => {
+            if (card !== except) {
+                setCardState(card, false);
+            }
+        });
+    };
+
+    flipCards.forEach(card => {
+        const toggleCard = () => {
+            const willFlip = !card.classList.contains('is-flipped');
+            closeAll(card);
+            setCardState(card, willFlip);
+        };
+
+        card.addEventListener('click', (event) => {
+            if (event.target.closest('a, button')) return;
+            toggleCard();
+        });
+
+        card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleCard();
+            } else if (event.key === 'Escape') {
+                setCardState(card, false);
+            }
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.flip-card')) {
+            closeAll();
+        }
+    });
 });
 
 // Performance optimization: Throttle scroll events
@@ -523,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Console welcome message
 console.log(`
-%c🌆 Tarik Yıldırım - Şehir Plancısı
+%c🌆 Tarık Yıldırım - Şehir Plancısı
 %cModern, responsive ve erişilebilir web sitesi
 %cGeliştirici: AI Assistant
 `, 

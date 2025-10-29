@@ -1,6 +1,6 @@
-# Tarik Yıldırım - Profesyonel Web Sitesi
+# Tarık Yıldırım - Profesyonel Web Sitesi
 
-Modern, responsive ve etkileşimli bir profesyonel web sitesi. Şehir plancısı, kentsel dönüşüm uzmanı ve lider Tarik Yıldırım'ın profesyonel kimliğini yansıtan kapsamlı bir dijital portföy.
+Modern, responsive ve etkileşimli bir profesyonel web sitesi. Şehir plancısı, kentsel dönüşüm uzmanı ve lider Tarık Yıldırım'ın profesyonel kimliğini yansıtan kapsamlı bir dijital portföy.
 
 ## 🌟 Özellikler
 
