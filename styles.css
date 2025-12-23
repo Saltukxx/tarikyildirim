@@ -955,6 +955,11 @@ section {
     line-height: 1.7;
 }
 
+/* Blue text for intro paragraph */
+.text-blue {
+    color: #2563eb;
+}
+
 .about-stats {
     display: flex;
     flex-direction: column;
